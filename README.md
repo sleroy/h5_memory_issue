@@ -40,6 +40,17 @@ This repository includes several Python scripts that demonstrate memory usage pa
 3. **process_data_optimized.py**: Optimized version using dictionary-based approach
 4. **process_data_numpy.py**: Highly optimized version using NumPy structured arrays
 
+## Memory Optimization Results
+
+### Original Implementation (process_data.py)
+![Original Memory Usage](process_data_memory_usage.png)
+
+### Dictionary-Based Optimization (process_data_optimized.py)
+![Optimized Memory Usage](process_data_optimized_memory_usage.png)
+
+### NumPy-Based Optimization (process_data_numpy.py)
+![NumPy Memory Usage](process_data_numpy_memory_usage.png)
+
 ## Memory Optimization Strategies
 
 The repository demonstrates several memory optimization techniques:
