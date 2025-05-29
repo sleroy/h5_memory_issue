@@ -1,8 +1,8 @@
-# Ferrari Memory Profiler - Amazon Q Analysis
+# Memory Profiler - Amazon Q Analysis
 
 ## Memory Issue Analysis
 
-The Ferrari Memory Profiler was used to analyze memory usage patterns in a Python data processing script that works with HDF5 files. The analysis revealed several key issues:
+The Memory Profiler was used to analyze memory usage patterns in a Python data processing script that works with HDF5 files. The analysis revealed several key issues:
 
 ### Observed Memory Behavior
 
