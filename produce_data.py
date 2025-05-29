@@ -1,8 +1,19 @@
 import h5py
 import numpy as np
 import os
+import time
+import psutil
+import json
+import gc
+from datetime import datetime
 
-def generate_test_files(num_files=3, num_groups=2, rows=1000000, cols=100):
+def log_memory(message):
+    """Simple memory logger"""
+    process = psutil.Process()
+    memory_info = process.memory_info().rss / 1024 / 1024  # MB
+    print(f"{message}: {memory_info:.2f} MB")
+
+def generate_test_files(num_files=3, num_groups=15, rows=1000000, cols=100):
     """
     Generate test HDF5 files with similar structure to your data
     """
@@ -34,5 +45,3 @@ def generate_test_files(num_files=3, num_groups=2, rows=1000000, cols=100):
 
 if __name__ == "__main__":
     generate_test_files()
-
-    

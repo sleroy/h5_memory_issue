@@ -2,7 +2,7 @@
 
 # Check if process ID is provided
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 <python_script.py> [sampling_interval_seconds]"
+    echo "Usage: $0 <python_script.py> [sampling_interval_seconds] [output_directory]"
     exit 1
 fi
 
@@ -21,6 +21,9 @@ OUTPUT_PREFIX=$(basename "$PYTHON_SCRIPT" .py)
 CSV_FILE="${OUTPUT_DIR}/${OUTPUT_PREFIX}_memory_usage.csv"
 PNG_FILE="${OUTPUT_DIR}/${OUTPUT_PREFIX}_memory_usage.png"
 GNUPLOT_SCRIPT="${OUTPUT_DIR}/${OUTPUT_PREFIX}_plot.gnu"
+TIMESTAMP_PREFIX=$(date +%Y%m%d_%H%M%S)
+DEBUG_CSV="${OUTPUT_DIR}/${TIMESTAMP_PREFIX}_${OUTPUT_PREFIX}_memory_debug.csv"
+DEBUG_PNG="${OUTPUT_DIR}/${TIMESTAMP_PREFIX}_${OUTPUT_PREFIX}_memory_debug.png"
 
 # Create gnuplot script template
 cat > "$GNUPLOT_SCRIPT" << EOL
@@ -46,6 +49,7 @@ PID=$!
 
 echo "Monitoring Python process with PID: $PID"
 echo "Time,RSS_KB,VSZ_KB" > "$CSV_FILE"
+echo "Time,RSS_KB,VSZ_KB" > "$DEBUG_CSV"
 
 # Function to update the plot
 update_plot() {
@@ -70,6 +74,7 @@ while kill -0 $PID 2>/dev/null; do
     TIMESTAMP=$(date +%s)
     
     echo "$TIMESTAMP,$RSS,$VSZ" >> "$CSV_FILE"
+    echo "$TIMESTAMP,$RSS,$VSZ" >> "$DEBUG_CSV"
     
     # Update the plot every interval
     update_plot
@@ -84,10 +89,33 @@ echo "Generating final memory usage plot..."
 CURRENT_DATE=$(date "+%Y-%m-%d %H:%M:%S")
 gnuplot -e "PID='$PID'; CURRENT_DATE='$CURRENT_DATE'" "$GNUPLOT_SCRIPT"
 
+# Create debug plot script
+DEBUG_GNUPLOT="${OUTPUT_DIR}/${TIMESTAMP_PREFIX}_${OUTPUT_PREFIX}_debug_plot.gnu"
+cat > "$DEBUG_GNUPLOT" << EOL
+set terminal png size 1200,800
+set output '$DEBUG_PNG'
+set title 'Memory Usage Debug: $PYTHON_SCRIPT (PID: $PID)\nDate: $CURRENT_DATE'
+set xlabel 'Time (seconds)'
+set ylabel 'Memory (KB)'
+set grid
+set key outside right top
+set datafile separator ','
+
+# Get the start time to calculate relative time
+start_time = system("head -2 $DEBUG_CSV | tail -1 | cut -d',' -f1")
+
+plot '$DEBUG_CSV' using (\$1-start_time):2 with lines lw 2 title 'RSS (Resident Set Size)', \
+     '$DEBUG_CSV' using (\$1-start_time):3 with lines lw 2 title 'VSZ (Virtual Memory Size)'
+EOL
+
+# Generate debug plot
+gnuplot "$DEBUG_GNUPLOT"
+
 if [ $? -eq 0 ]; then
     echo "Final plot generated: $PNG_FILE"
-    # Clean up the gnuplot script
-    rm -f "$GNUPLOT_SCRIPT"
+    echo "Debug data saved to: $DEBUG_CSV"
+    echo "Debug plot saved to: $DEBUG_PNG"
+    # Keep the debug gnuplot script for reference
 else
     echo "Error generating final plot"
 fi

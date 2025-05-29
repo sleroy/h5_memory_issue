@@ -13,7 +13,7 @@ def log_memory(message):
     memory_info = process.memory_info().rss / 1024 / 1024  # MB
     print(f"{message}: {memory_info:.2f} MB")
 
-def process_files(batch_size=20000):  # Increased from 200 to 2000
+def process_files(batch_size=100000):
     """
     Process the test files using similar pattern to the original code
     """
@@ -44,20 +44,10 @@ def process_files(batch_size=20000):  # Increased from 200 to 2000
             
             with open(file_path, 'rb') as s3file:
                 with h5py.File(file_path, 'r') as f:
-                    # Create a larger dictionary by duplicating data multiple times
-                    # This will increase memory usage significantly
-                    base_data = {
+                    DATA_DICT = {
                         str(c[0]): f[f"GROUP{c[1]}"][int(c[2])-1][bounds[0]:bounds[1]].tolist()
                         for c in columns_group_position
                     }
-                    
-                    # Duplicate the data to increase memory usage (5x more memory)
-                    DATA_DICT = {}
-                    for k, v in base_data.items():
-                        DATA_DICT[k] = v
-                        # Create additional copies with slightly modified keys
-                        for i in range(1, 6):
-                            DATA_DICT[f"{k}_copy_{i}"] = v.copy()
             
             end_time = time.time()
             log_memory("After dictionary creation")
@@ -68,7 +58,7 @@ def process_files(batch_size=20000):  # Increased from 200 to 2000
                 'batch': n,
                 'bounds': bounds,
                 'processing_time': end_time - start_time,
-                'dict_keys': list(DATA_DICT.keys())[:10],  # Only save first 10 keys to avoid huge JSON
+                'dict_keys': list(DATA_DICT.keys()),
                 'first_values': {k: v[0] if len(v) > 0 else None 
                                for k, v in list(DATA_DICT.items())[:3]}  # Save first 3 keys only
             }
@@ -77,10 +67,6 @@ def process_files(batch_size=20000):  # Increased from 200 to 2000
             # Clean up
             DATA_DICT.clear()
             del DATA_DICT
-            
-            # Force garbage collection after each batch
-            gc.collect()
-            log_memory("After garbage collection")
     
     # Save results
     with open('processing_results.json', 'w') as f:
