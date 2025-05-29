@@ -5,8 +5,11 @@ test_data/
 
 # Generated output files
 *_memory_usage.csv
+memory_usage.csv
 *_memory_usage.png
+memory_usage.png
 *_plot.gnu
+plot_memory.gnu
 processing_results.json
 
 # Python virtual environment
